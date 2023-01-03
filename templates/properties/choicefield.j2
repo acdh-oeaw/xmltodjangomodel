@@ -1,0 +1,2 @@
+{{ property | upper }}_CHOICES = ({% for choice in attributes['choices'] %}("{{choice}}", "{{choice}}"), {% endfor %})
+    {{ property }} = models.CharField(max_length={{attributes['length']}}, choices={{ property|upper}}_CHOICES, blank=True)

@@ -1,0 +1,12 @@
+{{relname}} = Property.objects.get_or_create(
+        name="{{key}}",
+        name_reverse="{{values['name_reverse']}}",
+    )[0]
+    {{relname}}.subj_class.clear()
+    {% for subj in values['subjects'] %}
+    {{relname}}.subj_class.add(ContentType.objects.get(model={{subj}}.__name__))
+    {% endfor %}
+    {{relname}}.obj_class.clear()
+    {% for obj in values['objects'] %}
+    {{relname}}.obj_class.add(ContentType.objects.get(model={{obj}}.__name__))
+    {% endfor %}

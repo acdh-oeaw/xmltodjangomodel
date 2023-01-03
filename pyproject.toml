@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "xmltodjangomodel"
+version = "0.1.0"
+description = "Convert a Cidoc XML file to a Django model"
+authors = ["Your Name <you@example.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.9"
+lxml = "^4.9.2"
+jinja2 = "^3.1.2"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
