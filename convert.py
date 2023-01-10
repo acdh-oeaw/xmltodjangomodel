@@ -4,6 +4,7 @@ convert a xml file to django models
 import argparse
 import json
 import sys
+import unicodedata
 
 from lxml import etree
 from jinja2 import Environment, FileSystemLoader
@@ -51,15 +52,20 @@ for cls in tree.xpath("//model/classes/class"):
         src = rel.xpath("./sourceClass/@target")[0].split(" ")
         trgt = rel.xpath("./targetClass/@target")[0].split(" ")
         name = rel.xpath("./name/text()")[0]
+        # get the ID from the relation and normalize it in case there are any umlauts
+        # then change the CapWords id to lowercase separated with an underscore
+        rid = unicodedata.normalize('NFKD', rel.get('ID')).encode('ascii', 'ignore').decode()
+        rid = ''.join([f"_{x.lower()}" if x.isupper() else x for x in rid])[1:]
         name_reverse = rel.xpath("./reverseName/text()")[0]
-        if name not in relations:
-            relations[name] = {
+        if rid not in relations:
+            relations[rid] = {
+                "name": name,
                 "name_reverse": name_reverse,
                 "subjects": src,
                 "objects": trgt,
                 }
         else:
-            if relations[name]["name_reverse"] != name_reverse:
+            if relations[rid]["name_reverse"] != name_reverse:
                 print("You got a mismatch in vocabs names")
             else:
                 if src not in relations["name"]["subjects"]:
@@ -67,7 +73,7 @@ for cls in tree.xpath("//model/classes/class"):
                 if trgt not in relations["name"]["objects"]:
                     relations["name"]["objects"].extend(trgt)
 
-result = {'classes': classes, 'relations': relations }
+result = {'classes': classes, 'relations': relations, 'filename': args.infile.name }
 if args.json:
     print(json.dumps(result, indent=3))
 
