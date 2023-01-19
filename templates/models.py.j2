@@ -12,11 +12,14 @@ from django.db import models
 from apis_core.apis_entities.models import TempEntityClass
 
 
-{% for key, values in classes.items() %}
+{% for key in classes %}
 @reversion.register(follow=["tempentityclass_ptr"])
 class {{key|capitalize}}({{base_cls | default('TempEntityClass')}}):
-    """ {{key|capitalize}}, auto generated from model xml """
-{% for property, attributes in values.items() -%}
+    """
+    {{ classes[key]['definition'] }}
+    Generated from model xml
+    """
+{% for property, attributes in classes[key]['properties'].items() -%}
 {% with dt='properties/' ~ attributes['datatype']~'.j2' -%}
 {% include dt ignore missing %}
 {% endwith -%}
