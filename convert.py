@@ -33,7 +33,9 @@ classes = {}
 
 for cls in tree.xpath("//model/classes/class"):
     cls_id = cls.xpath("./@ID")[0]
-    classes[cls_id] = {}
+    definition = cls.xpath('./definition//text()')
+    definition = ''.join(definition)
+    classes[cls_id] = {'definition': definition.strip(), 'properties': {}}
 
     for prp in cls.xpath("./properties/property"):
         prp_id = prp.xpath("./@ID")[0]
@@ -42,11 +44,11 @@ for cls in tree.xpath("//model/classes/class"):
             continue
         datatype = prp.xpath("./datatypeName/@target")[0]
         vocabref = prp.xpath("./datatypeName/@vocabRef")
-        classes[cls_id][propertyname] = {'datatype': map_fields[datatype]}
+        classes[cls_id]['properties'][propertyname] = {'datatype': map_fields[datatype]}
         if datatype == "choiceField" and len(vocabref) > 0:
             lst_choices = tree.xpath(f"//vocab[@ID = '{vocabref[0]}']/values/list/item/text()")
-            classes[cls_id][propertyname]['length'] = max(len(x) for x in lst_choices)
-            classes[cls_id][propertyname]['choices'] = lst_choices
+            classes[cls_id]['properties'][propertyname]['length'] = max(len(x) for x in lst_choices)
+            classes[cls_id]['properties'][propertyname]['choices'] = lst_choices
 
     for rel in cls.xpath("./relations/relation"):
         src = rel.xpath("./sourceClass/@target")[0].split(" ")
