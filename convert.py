@@ -14,16 +14,18 @@ map_fields = {
     "int": "integerfield",
     "shortText": "charfield",
     "longText": "textfield",
-    "choiceField": "choicefield"
+    "choiceField": "choicefield",
 }
 
-jinja_env = Environment(loader=FileSystemLoader('templates/'), autoescape=False)
+jinja_env = Environment(loader=FileSystemLoader("templates/"), autoescape=False)
 
 # get input and output files
 parser = argparse.ArgumentParser()
-parser.add_argument('infile', type=argparse.FileType('r'))
-parser.add_argument('outfile', nargs='?', type=argparse.FileType('w'), default=sys.stdout)
-parser.add_argument('-j', '--json', action='store_true')
+parser.add_argument("infile", type=argparse.FileType("r"))
+parser.add_argument(
+    "outfile", nargs="?", type=argparse.FileType("w"), default=sys.stdout
+)
+parser.add_argument("-j", "--json", action="store_true")
 args = parser.parse_args()
 
 tree = etree.parse(args.infile)
@@ -33,9 +35,9 @@ classes = {}
 
 for cls in tree.xpath("//model/classes/class"):
     cls_id = cls.xpath("./@ID")[0]
-    definition = cls.xpath('./definition//text()')
-    definition = ''.join(definition)
-    classes[cls_id] = {'definition': definition.strip(), 'properties': {}}
+    definition = cls.xpath("./definition//text()")
+    definition = "".join(definition)
+    classes[cls_id] = {"definition": definition.strip(), "properties": {}}
 
     for prp in cls.xpath("./properties/property"):
         prp_id = prp.xpath("./@ID")[0]
@@ -44,11 +46,15 @@ for cls in tree.xpath("//model/classes/class"):
             continue
         datatype = prp.xpath("./datatypeName/@target")[0]
         vocabref = prp.xpath("./datatypeName/@vocabRef")
-        classes[cls_id]['properties'][propertyname] = {'datatype': map_fields[datatype]}
+        classes[cls_id]["properties"][propertyname] = {"datatype": map_fields[datatype]}
         if datatype == "choiceField" and len(vocabref) > 0:
-            lst_choices = tree.xpath(f"//vocab[@ID = '{vocabref[0]}']/values/list/item/text()")
-            classes[cls_id]['properties'][propertyname]['length'] = max(len(x) for x in lst_choices)
-            classes[cls_id]['properties'][propertyname]['choices'] = lst_choices
+            lst_choices = tree.xpath(
+                f"//vocab[@ID = '{vocabref[0]}']/values/list/item/text()"
+            )
+            classes[cls_id]["properties"][propertyname]["length"] = max(
+                len(x) for x in lst_choices
+            )
+            classes[cls_id]["properties"][propertyname]["choices"] = lst_choices
 
     for rel in cls.xpath("./relations/relation"):
         src = rel.xpath("./sourceClass/@target")[0].split(" ")
@@ -56,8 +62,12 @@ for cls in tree.xpath("//model/classes/class"):
         name = rel.xpath("./name/text()")[0]
         # get the ID from the relation and normalize it in case there are any umlauts
         # then change the CapWords id to lowercase separated with an underscore
-        rid = unicodedata.normalize('NFKD', rel.get('ID')).encode('ascii', 'ignore').decode()
-        rid = ''.join([f"_{x.lower()}" if x.isupper() else x for x in rid])[1:]
+        rid = (
+            unicodedata.normalize("NFKD", rel.get("ID"))
+            .encode("ascii", "ignore")
+            .decode()
+        )
+        rid = "".join([f"_{x.lower()}" if x.isupper() else x for x in rid])[1:]
         name_reverse = rel.xpath("./reverseName/text()")[0]
         if rid not in relations:
             relations[rid] = {
@@ -65,7 +75,7 @@ for cls in tree.xpath("//model/classes/class"):
                 "name_reverse": name_reverse,
                 "subjects": src,
                 "objects": trgt,
-                }
+            }
         else:
             if relations[rid]["name_reverse"] != name_reverse:
                 print("You got a mismatch in vocabs names")
@@ -75,10 +85,10 @@ for cls in tree.xpath("//model/classes/class"):
                 if trgt not in relations["name"]["objects"]:
                     relations["name"]["objects"].extend(trgt)
 
-result = {'classes': classes, 'relations': relations, 'filename': args.infile.name }
+result = {"classes": classes, "relations": relations, "filename": args.infile.name}
 if args.json:
     print(json.dumps(result, indent=3))
 
-models = jinja_env.get_template('models.py.j2').render(result)
+models = jinja_env.get_template("models.py.j2").render(result)
 
 args.outfile.write(models)
