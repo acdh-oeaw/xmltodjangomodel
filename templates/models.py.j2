@@ -32,11 +32,7 @@ def construct_properties():
     based on the relations defined in the xml
     """
 
-    from apis_core.apis_vocabularies.models import TextType
-    from apis_core.apis_metainfo.models import Collection
     from apis_core.apis_relations.models import Property
-    from apis_highlighter.models import AnnotationProject, Project
-    from django.contrib.auth.models import User
 
 {% for key, values in relations.items() -%}
 {% include 'relation.j2' -%}
