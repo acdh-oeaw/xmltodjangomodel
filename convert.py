@@ -1,6 +1,7 @@
 """
 convert a xml file to django models
 """
+# pylint: disable=too-many-locals
 import argparse
 import json
 import sys
@@ -28,64 +29,73 @@ parser.add_argument(
 parser.add_argument("-j", "--json", action="store_true")
 args = parser.parse_args()
 
-tree = etree.parse(args.infile)
 
-relations = {}
-classes = {}
+def extractinfo(infile):
+    """Extract the relevant fields from the xml file an return a dict"""
+    tree = etree.parse(infile)
 
-for cls in tree.xpath("//model/classes/class"):
-    cls_id = cls.xpath("./@ID")[0]
-    definition = cls.xpath("./definition//text()")
-    definition = "".join(definition)
-    classes[cls_id] = {"definition": definition.strip(), "properties": {}}
+    relations = {}
+    classes = {}
 
-    for prp in cls.xpath("./properties/property"):
-        prp_id = prp.xpath("./@ID")[0]
-        propertyname = prp_id.split(".")[-1]
-        if "date_written" in prp_id or prp_id.split(".")[-1] == "name":
-            continue
-        datatype = prp.xpath("./datatypeName/@target")[0]
-        vocabref = prp.xpath("./datatypeName/@vocabRef")
-        classes[cls_id]["properties"][propertyname] = {"datatype": map_fields[datatype]}
-        if datatype == "choiceField" and len(vocabref) > 0:
-            lst_choices = tree.xpath(
-                f"//vocab[@ID = '{vocabref[0]}']/values/list/item/text()"
-            )
-            classes[cls_id]["properties"][propertyname]["length"] = max(
-                len(x) for x in lst_choices
-            )
-            classes[cls_id]["properties"][propertyname]["choices"] = lst_choices
+    for cls in tree.xpath("//model/classes/class"):
+        cls_id = cls.xpath("./@ID")[0]
+        definition = cls.xpath("./definition//text()")
+        definition = "".join(definition)
+        classes[cls_id] = {"definition": definition.strip(), "properties": {}}
 
-    for rel in cls.xpath("./relations/relation"):
-        src = rel.xpath("./sourceClass/@target")[0].split(" ")
-        trgt = rel.xpath("./targetClass/@target")[0].split(" ")
-        name = rel.xpath("./name/text()")[0]
-        # get the ID from the relation and normalize it in case there are any umlauts
-        # then change the CapWords id to lowercase separated with an underscore
-        rid = (
-            unicodedata.normalize("NFKD", rel.get("ID"))
-            .encode("ascii", "ignore")
-            .decode()
-        )
-        rid = "".join([f"_{x.lower()}" if x.isupper() else x for x in rid])[1:]
-        name_reverse = rel.xpath("./reverseName/text()")[0]
-        if rid not in relations:
-            relations[rid] = {
-                "name": name,
-                "name_reverse": name_reverse,
-                "subjects": src,
-                "objects": trgt,
+        for prp in cls.xpath("./properties/property"):
+            prp_id = prp.xpath("./@ID")[0]
+            propertyname = prp_id.split(".")[-1]
+            if "date_written" in prp_id or prp_id.split(".")[-1] == "name":
+                continue
+            datatype = prp.xpath("./datatypeName/@target")[0]
+            vocabref = prp.xpath("./datatypeName/@vocabRef")
+            classes[cls_id]["properties"][propertyname] = {
+                "datatype": map_fields[datatype]
             }
-        else:
-            if relations[rid]["name_reverse"] != name_reverse:
-                print("You got a mismatch in vocabs names")
-            else:
-                if src not in relations["name"]["subjects"]:
-                    relations["name"]["subjects"].extend(src)
-                if trgt not in relations["name"]["objects"]:
-                    relations["name"]["objects"].extend(trgt)
+            if datatype == "choiceField" and len(vocabref) > 0:
+                lst_choices = tree.xpath(
+                    f"//vocab[@ID = '{vocabref[0]}']/values/list/item/text()"
+                )
+                classes[cls_id]["properties"][propertyname]["length"] = max(
+                    len(x) for x in lst_choices
+                )
+                classes[cls_id]["properties"][propertyname]["choices"] = lst_choices
 
-result = {"classes": classes, "relations": relations, "filename": args.infile.name}
+        for rel in cls.xpath("./relations/relation"):
+            src = rel.xpath("./sourceClass/@target")[0].split(" ")
+            trgt = rel.xpath("./targetClass/@target")[0].split(" ")
+            name = rel.xpath("./name/text()")[0]
+            # get the ID from the relation and normalize it in case there are any umlauts
+            # then change the CapWords id to lowercase separated with an underscore
+            rid = (
+                unicodedata.normalize("NFKD", rel.get("ID"))
+                .encode("ascii", "ignore")
+                .decode()
+            )
+            rid = "".join([f"_{x.lower()}" if x.isupper() else x for x in rid])[1:]
+            name_reverse = rel.xpath("./reverseName/text()")[0]
+            if rid not in relations:
+                relations[rid] = {
+                    "name": name,
+                    "name_reverse": name_reverse,
+                    "subjects": src,
+                    "objects": trgt,
+                }
+            else:
+                if relations[rid]["name_reverse"] != name_reverse:
+                    print("You got a mismatch in vocabs names")
+                else:
+                    if src not in relations["name"]["subjects"]:
+                        relations["name"]["subjects"].extend(src)
+                    if trgt not in relations["name"]["objects"]:
+                        relations["name"]["objects"].extend(trgt)
+
+    return {"classes": classes, "relations": relations, "filename": infile.name}
+
+
+result = extractinfo(args.infile)
+
 if args.json:
     print(json.dumps(result, indent=3))
 
