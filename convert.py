@@ -1,7 +1,7 @@
 """
 convert a xml file to django models
 """
-# pylint: disable=too-many-locals
+# pylint: disable=too-many-locals, import-error
 import argparse
 import json
 import sys
