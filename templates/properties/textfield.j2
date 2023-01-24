@@ -1,1 +1,1 @@
-    {{property}} = models.TextField(blank=True, null=True)
+    {{property}} = models.TextField(blank=True, null=True, {% include 'properties/_default_fields.j2' %})

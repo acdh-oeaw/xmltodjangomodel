@@ -48,11 +48,14 @@ def extractinfo(infile):
             propertyname = prp_id.split(".")[-1]
             if "date_written" in prp_id or prp_id.split(".")[-1] == "name":
                 continue
+
             datatype = prp.xpath("./datatypeName/@target")[0]
-            vocabref = prp.xpath("./datatypeName/@vocabRef")
             classes[cls_id]["properties"][propertyname] = {
-                "datatype": map_fields[datatype]
+                "name": prp.xpath("./name/text()")[0],
+                "note": prp.xpath("./note/text()")[0],
+                "datatype": map_fields[datatype],
             }
+            vocabref = prp.xpath("./datatypeName/@vocabRef")
             if datatype == "choiceField" and len(vocabref) > 0:
                 lst_choices = tree.xpath(
                     f"//vocab[@ID = '{vocabref[0]}']/values/list/item/text()"
