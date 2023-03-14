@@ -71,12 +71,12 @@ def extractinfo(infile):
             name = rel.xpath("./name/text()")[0]
             # get the ID from the relation and normalize it in case there are any umlauts
             # then change the CapWords id to lowercase separated with an underscore
-            rid = (
+            nid = (
                 unicodedata.normalize("NFKD", rel.get("ID"))
                 .encode("ascii", "ignore")
                 .decode()
             )
-            rid = "".join([f"_{x.lower()}" if x.isupper() else x for x in rid])[1:]
+            rid = "".join([f"_{x.lower()}" if x.isupper() else x for x in nid])[1:]
             name_reverse = rel.xpath("./reverseName/text()")[0]
             if rid not in relations:
                 relations[rid] = {
@@ -84,6 +84,7 @@ def extractinfo(infile):
                     "name_reverse": name_reverse,
                     "subjects": src,
                     "objects": trgt,
+                    "nid": nid,
                 }
             else:
                 if relations[rid]["name_reverse"] != name_reverse:
