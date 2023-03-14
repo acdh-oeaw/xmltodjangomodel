@@ -1,0 +1,25 @@
+
+    {%- for subj in values['subjects'] %}
+    {{key}}_in = Property.objects.get_or_create(
+        name="{{subj}} {{values['name']}}",
+        name_reverse="{{values['name_reverse_new']}} {{subj}}",
+    )[0]
+    #{{key}}_in.subj_class.clear()
+    {{key}}_in.subj_class.add(ContentType.objects.get(model={{subj|capitalize}}.__name__))
+    #{{key}}_in.obj_class.clear()
+    {{key}}_in.obj_class.add(ContentType.objects.get(model={{values['nid']}}.__name__))
+    {%- endfor %}
+
+    {%- for obj in values['objects'] %}
+    {{key}}_out = Property.objects.get_or_create(
+        name="{{values['name']}} {{obj}}",
+        name_reverse="{{obj}} {{values['name_reverse_new']}}",
+    )[0]
+    #{{key}}_out.subj_class.clear()
+    {%- for subj in values['subjects'] %}
+    {{key}}_out.subj_class.add(ContentType.objects.get(model={{values['nid']}}.__name__))
+    {%- endfor %}
+    #{{key}}_out.obj_class.clear()
+    {{key}}_out.obj_class.add(ContentType.objects.get(model={{obj|capitalize}}.__name__))
+    {%- endfor %}
+

@@ -79,9 +79,17 @@ def extractinfo(infile):
             rid = "".join([f"_{x.lower()}" if x.isupper() else x for x in nid])[1:]
             name_reverse = rel.xpath("./reverseName/text()")[0]
             if rid not in relations:
+                # this is a temporary fix for harmonizing terminology
+                # while doing migration to reification
+                name_reverse_new = (
+                    name_reverse
+                    if name_reverse != "angewiesen von"
+                    else "auf Anweisung von"
+                )
                 relations[rid] = {
                     "name": name,
                     "name_reverse": name_reverse,
+                    "name_reverse_new": name_reverse_new,
                     "subjects": src,
                     "objects": trgt,
                     "nid": nid,

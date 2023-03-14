@@ -10,6 +10,7 @@ import reversion
 from django.contrib.contenttypes.models import ContentType
 from django.db import models
 from apis_core.apis_entities.models import TempEntityClass
+from apis_core.apis_relations.models import AbstractReification
 
 
 {% for key in classes %}
@@ -26,6 +27,12 @@ class {{key|capitalize}}({{base_cls | default('TempEntityClass')}}):
 {% endfor %}
 {% endfor %}
 
+# Reifications
+
+{% for key, values in relations.items() -%}
+{% include 'abstract_reification.j2' -%}
+{% endfor %}
+
 def construct_properties():
     """
     construct properties for all the models
@@ -36,4 +43,10 @@ def construct_properties():
 
 {% for key, values in relations.items() -%}
 {% include 'relation.j2' -%}
+{% endfor %}
+
+# Reification properties
+
+{% for key, values in relations.items() -%}
+{% include 'reification_property.j2' -%}
 {% endfor -%}
