@@ -27,6 +27,7 @@ parser.add_argument(
     "outfile", nargs="?", type=argparse.FileType("w"), default=sys.stdout
 )
 parser.add_argument("-j", "--json", action="store_true")
+parser.add_argument("-r", "--reificationscript", action="store_true")
 args = parser.parse_args()
 
 
@@ -110,6 +111,10 @@ result = extractinfo(args.infile)
 
 if args.json:
     print(json.dumps(result, indent=3))
+
+if args.reificationscript:
+    print(jinja_env.get_template("reificationscript.j2").render(result))
+    sys.exit(0)
 
 models = jinja_env.get_template("models.py.j2").render(result)
 

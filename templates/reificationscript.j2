@@ -1,0 +1,36 @@
+from apis_ontology.models import *
+from apis_core.apis_relations.models import Property, TempTriple, Triple
+
+alltt = TempTriple.objects.all()
+print(f"Converting {len(alltt)} temptriples")
+converted = 0
+{% for key, values in relations.items() -%}
+# {{ key }} -> {{ values['nid'] }}
+
+{% for subject in values['subjects'] %}
+{% for object in values['objects'] %}
+prop = Property.objects.get(name="{{ values['name'] }}", name_reverse="{{ values['name_reverse'] }}")
+subj = ContentType.objects.get(model="{{ subject | capitalize }}")
+obj = ContentType.objects.get(model="{{ object | capitalize }}")
+temptriples = TempTriple.objects.filter(subj__self_contenttype=subj, obj__self_contenttype=obj, prop=prop)
+print(f"{{ subject }} {{ values['name'] }} {{ object }}: {len(temptriples)} occurences")
+for tt in temptriples:
+	reification = {{values['nid']}}.objects.create(
+				start_date = tt.start_date,
+				start_start_date = tt.start_start_date,
+				start_end_date = tt.start_end_date,
+				start_date_written = tt.start_date_written,
+				end_date = tt.end_date,
+				end_start_date = tt.end_start_date,
+				end_end_date = tt.end_end_date,
+				end_date_written = tt.end_date_written)
+	propin = Property.objects.get(name = "{{ subject }} {{ values['name'] }}")
+	triple_in = Triple.objects.create(subj = tt.subj, obj = reification, prop = propin)
+	propout = Property.objects.get(name = "{{ values['name'] }} {{ object }}")
+	triple_out = Triple.objects.create(subj = reification, obj = tt.obj, prop = propout)
+converted += len(temptriples)
+percentage = 100 * float(converted) / float(len(alltt))
+print(f"{percentage:.4f}%")
+{% endfor %}
+{% endfor %}
+{% endfor %}
