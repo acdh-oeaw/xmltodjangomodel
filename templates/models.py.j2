@@ -24,6 +24,7 @@ class {{key|capitalize}}({{base_cls | default('TempEntityClass')}}):
 {% include dt ignore missing %}
 {% endwith -%}
 {% endfor %}
+{% with methods='methods/' ~ key ~ '.py' %}{% include methods ignore missing %}{% endwith -%}
 {% endfor %}
 
 def construct_properties():
