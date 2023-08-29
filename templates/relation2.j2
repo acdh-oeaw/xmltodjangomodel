@@ -1,0 +1,15 @@
+{% for subj in values['subjects'] -%}
+{% for obj in values['objects'] -%}
+
+class {{subj|capitalize}}_{{values['orid']}}_{{obj|capitalize}}(Relation, LegacyDateMixin):
+    subj_model = {{ subj|capitalize }}
+    obj_model = {{ obj|capitalize }}
+    name="{{values['name']}}"
+    name_reverse="{{values['name_reverse']}}"
+
+    temptriple_name="{{values['name']}}"
+    temptriple_name_reverse="{{values['name_reverse']}}"
+    temptriple_field_list = ['start_date', 'start_start_date', 'start_end_date', 'end_date', 'end_start_date', 'end_end_date', 'start_date_written', 'end_date_written']
+
+{% endfor -%}
+{% endfor -%}

@@ -26,6 +26,12 @@ class {{key|capitalize}}({{base_cls | default('TempEntityClass')}}):
 {% endfor %}
 {% endfor %}
 
+from apis_relations2.models import Relation
+from apis_core.core.models import LegacyDateMixin
+{% for key, values in relations.items() -%}
+{% include 'relation2.j2' %}
+{% endfor -%}
+
 def construct_properties():
     """
     construct properties for all the models
